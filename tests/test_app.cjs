@@ -38,7 +38,7 @@ const BASE = 'http://localhost:8768/';
 
   // ---- the owner ----
   const o = await page();
-  await o.goto(BASE); await o.evaluate(() => localStorage.setItem('specialist-study-pass', JSON.stringify('pw'))); await o.reload();
+  await o.goto(BASE); await o.evaluate(() => localStorage.setItem('methods-study-pass', JSON.stringify('pw'))); await o.reload();
   await o.waitForSelector('#main .hello');
   await o.setInputFiles('#file-pick', shots);
   await o.waitForSelector('#up-done:not([disabled])', { timeout: 20000 });
