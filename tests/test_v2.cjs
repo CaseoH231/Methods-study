@@ -1,4 +1,4 @@
-// The study tools in a real browser: practice, graph, formula sheet, planner (shared dates), confidence ratings, share.
+// The study tools in a real browser: practice, formula sheet, planner (shared dates), confidence ratings, share.
 const { chromium } = require('playwright');
 const path = require('path');
 const { fakeGitHub } = require('./fakes.cjs');
@@ -31,14 +31,15 @@ const BASE = 'http://localhost:8768/';
   const pLocked = !(await empty.$('.pr-card'));
   await empty.goto(BASE + '#/formulas'); await empty.waitForSelector('.locked');
   const fLocked = (await empty.$$('.f-card')).length === 0;
-  await empty.goto(BASE + '#/graph'); await empty.waitForSelector('#g-canvas');
-  check('locked: nothing uploaded → no practice, no formulas, no example graphs', pLocked && fLocked && !(await empty.$('.g-presets')) && (await empty.inputValue('[data-fn="0"]')) === '');
+  check('locked: nothing uploaded → no practice, no formulas', pLocked && fLocked);
   await empty.close();
   // Upload some topics: only those unlock.
   gh.put('data/library.json', JSON.stringify({ version: 1, events: [], photos: [{ id: 'p-aaaaaa1', topic: 't-prob', title: 'Venn diagram questions', added: '2026-11-20', file: 'photos/p-aaaaaa1.jpg' }],
     topics: [{ id: 't-calc', name: 'Calculus', color: '#4f46e5' }, { id: 't-prob', name: 'Probability', color: '#be185d' }, { id: 't-log', name: 'Log laws', color: '#0f766e' }] }));
   const o = await page(true);
-  check('home: study tools, planner and practice cards', (await o.$$('.tool-tile')).length === 4 && !!(await o.$('.up-next')) && !!(await o.$('.streak-card')));
+  check('home: study tools, planner and practice cards', (await o.$$('.tool-tile')).length === 3 && !!(await o.$('.up-next')) && !!(await o.$('.streak-card')));
+  await o.goto(BASE + '#/graph'); await o.waitForSelector('#main .hello');
+  check('graph plotter is gone: no sidebar link, and its old address just shows Home', !(await o.$('[data-page="graph"]')) && !(await o.$('#g-canvas')));
 
   // Practice: answer one right, one wrong.
   await o.click('#topics [data-page="practice"]'); await o.waitForSelector('.pr-card');
@@ -58,16 +59,6 @@ const BASE = 'http://localhost:8768/';
   check('practice: choosing a topic gives questions on it', (await o.textContent('.pr-card .eyebrow')).trim() === 'Probability');
   const chips = await o.$$eval('.pr-topics [data-ptopic]', (x) => x.map((e) => e.dataset.ptopic).filter(Boolean).sort().join('|'));
   check('practice: only topics that have been uploaded are offered', chips === 'Differentiation|Exponentials & logs|Probability');
-
-  // Graph.
-  await o.click('#topics [data-page="graph"]'); await o.waitForSelector('#g-canvas');
-  await o.fill('[data-fn="0"]', 'm x + c'); await o.waitForTimeout(100);
-  const sliders = await o.$$eval('.g-sl b', (x) => x.map((e) => e.textContent).join(''));
-  await o.fill('[data-fn="1"]', 'x^2 +'); await o.waitForTimeout(100);
-  const err = await o.textContent('[data-err="1"]');
-  const box = await o.$eval('#g-canvas', (c) => { const r = c.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
-  await o.mouse.click(box.x, box.y); await o.waitForTimeout(100);
-  check('graph: letters become sliders, mistakes are explained, tapping reads a point', sliders === 'cm' && err.length > 3 && (await o.textContent('#g-read')).startsWith('x = '));
 
   // Formula sheet.
   await o.click('#topics [data-page="formulas"]'); await o.waitForSelector('.f-card');

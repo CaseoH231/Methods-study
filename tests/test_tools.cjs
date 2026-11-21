@@ -1,8 +1,8 @@
-// The study tools' maths: the graph plotter's formula reader, and the practice questions' answers – each checked a
+// The study tools' maths: the test formula reader, and the practice questions' answers – each checked a
 // second, independent way (numeric derivatives, integrals and minimums of the question's own function).
 const path = require('path');
 (async () => {
-  const { parse } = await import(path.join(__dirname, '..', 'graph.js'));
+  const { parse } = await import(path.join(__dirname, 'expr.mjs'));
   const P = await import(path.join(__dirname, '..', 'practice.js'));
   const checks = []; const check = (n, ok) => checks.push(`${ok ? 'ok  ' : 'FAIL'} ${n}`);
   const near = (a, b, tol = 1e-6) => Math.abs(a - b) < tol;
@@ -13,11 +13,11 @@ const path = require('path');
     ['3sqrt(x)', 4, 6], ['e^x', 1, Math.E], ['ln(e^2)', 0, 2], ['log(1000)', 0, 3], ['|x-5|', 2, 3], ['2|x|+|x-1|', -1, 4], ['2pi', 0, 2 * Math.PI],
     ['x/2/2', 8, 2], ['sin^2(x)+cos^2(x)', 0.7, 1], ['a e^(b x)', 0, 2], ['3x²', 2, 12], ['x−1', 5, 4]];
   const wrong = cases.filter(([s, x, want]) => { try { return !near(val(s, x), want); } catch { return true; } });
-  check(`graph: ${cases.length} formulas read and worked out correctly`, !wrong.length);
+  check(`formula reader: ${cases.length} formulas read and worked out correctly`, !wrong.length);
   if (wrong.length) console.log('wrong:', wrong.map((c) => c[0]).join(', '));
   const errs = ['2x+', '(x', 'y+1', 'x))', ''].map((s) => { try { parse(s); return null; } catch (e) { return e.message; } });
-  check('graph: broken formulas give a helpful message, never a crash', errs.every((m) => typeof m === 'string' && m.length > 5));
-  check('graph: letters become sliders', JSON.stringify(parse('a(x-h)^2+k').params) === '["a","h","k"]' && parse('2x+1').params.length === 0);
+  check('formula reader: broken formulas give a helpful message, never a crash', errs.every((m) => typeof m === 'string' && m.length > 5));
+  check('formula reader: letters become parameters', JSON.stringify(parse('a(x-h)^2+k').params) === '["a","h","k"]' && parse('2x+1').params.length === 0);
 
   // Practice answers, checked independently.
   let seed = 12345; const r = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);

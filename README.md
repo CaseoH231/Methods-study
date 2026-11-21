@@ -9,7 +9,6 @@ Live at **https://methods-study.adrian11jonker.workers.dev** – installable as 
 - **✦ Ask** – the helper: "move the chain rule photos into Calculus", "rename this topic"… It suggests, you press **Do it**.
 - **Notes** under each photo are written once a week by Claude (see `docs/WEEKLY.md`).
 - **Practice** – fresh questions on the topics you've uploaded work for (nothing else), marked instantly with worked answers, plus a daily streak.
-- **Graph** – plot up to three functions; letters like a, h, k become sliders so you can see transformations. Drag, zoom, tap to read off points.
 - **Formula sheet** – only formulas for what you've uploaded; more unlock as you upload. Searchable, star the ones you forget, printable.
 - **Planner** – SAC/test dates with countdowns. The owner's are shared with everyone; friends can add their own.
 - **Confidence** – mark each topic 🔴 / 🟡 / 🟢; home shows what to revise first. **Share** a link to any topic or photo, or **print** a topic as a PDF.

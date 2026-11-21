@@ -8,7 +8,6 @@
 //     Theirs stay on their device only (IndexedDB), never on the server.
 import { loadCourse, courseHtml, bindCourse, courseCount } from './course.js';
 import { applyOps, emptyLibrary, topicOf, photoOf, kids, ancestors, pathOf, below, treeOrder, outline, formatNotes, COLORS, KINDS } from './lib.js';
-import { graphHtml, bindGraph } from './graph.js';
 import { practiceHtml, bindPractice, practiceStats, currentQuestion } from './practice.js';
 import { formulasHtml, bindFormulas, formulaCount } from './formulas.js';
 import { setSources } from './unlock.js';
@@ -31,9 +30,9 @@ let server = store.get(K.lib) || emptyLibrary();   // the owner's library (a sav
 let mine = store.get(K.mine) || { topics: [], photos: [] }; // this device's own photos (friends)
 let who = null;                                     // /api/whoami
 let current = HOME, photoId = null, query = '';
-// Study-tool pages: #/practice, #/graph, #/formulas, #/planner, #/course (null = the photo pages).
+// Study-tool pages: #/practice, #/formulas, #/planner, #/course (null = the photo pages).
 let page = null;
-const PAGES = { practice: ['✎', 'Practice'], graph: ['📈', 'Graph'], formulas: ['∑', 'Formulas'], planner: ['🗓', 'Planner'], course: ['📘', 'Course'] };
+const PAGES = { practice: ['✎', 'Practice'], formulas: ['∑', 'Formulas'], planner: ['🗓', 'Planner'], course: ['📘', 'Course'] };
 const openFolders = new Set(store.get(K.open, []));
 const localUrls = new Map();                        // id → object URL of a photo kept on this device
 
@@ -359,7 +358,7 @@ function render() {
   if (photoId && !P(photoId)) photoId = null;
   $('#sub').textContent = `${plural(V.photos.length, 'photo')} · ${plural(V.topics.length, 'topic')}${passcode() ? ' · 🔑 Owner' : ''}`;
   const nextEv = upcoming()[0];
-  const badge = { course: courseCount() || '', practice: practiceStats().streak ? `🔥${practiceStats().streak}` : '', planner: nextEv ? countdown(nextEv.date, true) : '', formulas: '', graph: '' };
+  const badge = { course: courseCount() || '', practice: practiceStats().streak ? `🔥${practiceStats().streak}` : '', planner: nextEv ? countdown(nextEv.date, true) : '', formulas: '' };
   $('#topics').innerHTML = `<button class="topic home ${current === HOME && !query && !photoId && !page ? 'on' : ''}" data-topic="${HOME}"><span class="ico">⌂</span><span class="nm">Home</span></button>
     ${Object.entries(PAGES).map(([k, [ico, name]]) => `<button class="topic home ${page === k ? 'on' : ''}" data-page="${k}"${k === 'course' ? ' data-course' : ''}><span class="ico">${ico}</span><span class="nm">${name}</span><span class="n">${badge[k]}</span></button>`).join('')}
     <div class="nav-label">Topics</div>${navTree()}<button class="topic add" id="add-topic">+ New topic</button>`;
@@ -380,7 +379,6 @@ function render() {
 function showPage(main) {
   const redraw = () => render();
   if (page === 'course') { main.innerHTML = courseHtml(isOwner()); bindCourse(main, { isOwner, callApi, toast, redraw }); return; }
-  if (page === 'graph') { main.innerHTML = graphHtml(); bindGraph(main); return; }
   if (page === 'practice') { const draw = () => { main.innerHTML = practiceHtml(); bindPractice(main, { redraw: draw }); renderMath(main); }; draw(); return; }
   if (page === 'formulas') { main.innerHTML = formulasHtml(); bindFormulas(main, { drawMaths: renderMath }); return; }
   if (page === 'planner') { main.innerHTML = plannerHtml(); bindPlanner(main); }
@@ -463,7 +461,7 @@ function home() {
       <section class="panel streak-card"><h3>Practice</h3><p class="big">🔥 ${st.streak}</p><p>day streak${st.streak ? '' : ' – answer a question to start one'}</p>
         <a class="btn primary-btn" href="#/practice">Practise now</a></section>
     </div>
-    <div class="tool-row">${tile('practice', unlockedTopics().length ? `On ${unlockedTopics().length === 1 ? unlockedTopics()[0] : `${unlockedTopics().length} of your topics`}` : '🔒 Unlocks as you upload')}${tile('graph', 'Plot functions with sliders')}${tile('formulas', formulaCount() ? `${formulaCount()} from your uploads` : '🔒 Unlocks as you upload')}${tile('planner', 'SACs & tests')}</div>
+    <div class="tool-row">${tile('practice', unlockedTopics().length ? `On ${unlockedTopics().length === 1 ? unlockedTopics()[0] : `${unlockedTopics().length} of your topics`}` : '🔒 Unlocks as you upload')}${tile('formulas', formulaCount() ? `${formulaCount()} from your uploads` : '🔒 Unlocks as you upload')}${tile('planner', 'SACs & tests')}</div>
     ${weak.length ? `<section class="panel revise"><h3>Revise these first</h3><p>Topics you marked 🔴 Need help.</p><div class="chips">${weak.map((t) => `<a class="chip ask" href="#/topic/${encodeURIComponent(t.id)}">${esc(t.name)}</a>`).join('')}</div></section>` : ''}
     ${isOwner() && mine.photos.length ? `<div class="hint warnbox adopt"><b>${plural(mine.photos.length, 'photo')} ${mine.photos.length === 1 ? 'is' : 'are'} only on this device</b>
       – uploaded before you logged in as owner, so they’re not in your shared library (and won’t get weekly notes).
@@ -522,7 +520,7 @@ function renderMath(el) {
   });
 }
 const drawMaths = (el) => el.querySelectorAll('.notes, .ev-list').forEach(renderMath);
-window.addEventListener('load', () => { if (page && page !== 'graph' && page !== 'planner') renderMath($('#main')); else drawMaths($('#main')); });
+window.addEventListener('load', () => { if (page && page !== 'planner') renderMath($('#main')); else drawMaths($('#main')); });
 
 // ---------- full-screen viewer ----------
 let viewing = null;
