@@ -512,3 +512,4 @@ img.c-doc { height: auto; }
 a.btn.primary-btn { background: var(--leaf); color: var(--leaf-ink); border-color: var(--leaf); }
 a.btn.primary-btn:hover { background: #63e2b5; }
 @media (max-width: 800px) { .g-plot { order: -1; } }
+.empty.locked .lock-ico { font-size: 34px; margin: 0 auto; } .empty.locked p { max-width: 520px; margin: 6px auto; }

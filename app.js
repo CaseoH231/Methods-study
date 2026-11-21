@@ -11,6 +11,8 @@ import { applyOps, emptyLibrary, topicOf, photoOf, kids, ancestors, pathOf, belo
 import { graphHtml, bindGraph } from './graph.js';
 import { practiceHtml, bindPractice, practiceStats, currentQuestion } from './practice.js';
 import { formulasHtml, bindFormulas, formulaCount } from './formulas.js';
+import { setSources } from './unlock.js';
+import { unlockedTopics } from './practice.js';
 
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -351,6 +353,8 @@ function folderCard(t) {
 }
 
 function render() {
+  // The study tools only cover what's been uploaded: tell them the uploaded topics' names and photos' titles.
+  setSources([...V.topics.map((t) => t.name), ...V.photos.map((p) => p.title)]);
   if (current !== HOME && !T(current)) current = HOME;
   if (photoId && !P(photoId)) photoId = null;
   $('#sub').textContent = `${plural(V.photos.length, 'photo')} · ${plural(V.topics.length, 'topic')}${passcode() ? ' · 🔑 Owner' : ''}`;
@@ -459,7 +463,7 @@ function home() {
       <section class="panel streak-card"><h3>Practice</h3><p class="big">🔥 ${st.streak}</p><p>day streak${st.streak ? '' : ' – answer a question to start one'}</p>
         <a class="btn primary-btn" href="#/practice">Practise now</a></section>
     </div>
-    <div class="tool-row">${tile('practice', 'Fresh questions, marked instantly')}${tile('graph', 'Sliders for a, h, k…')}${tile('formulas', `${formulaCount()} formulas, searchable`)}${tile('planner', 'SACs & tests')}</div>
+    <div class="tool-row">${tile('practice', unlockedTopics().length ? `On ${unlockedTopics().length === 1 ? unlockedTopics()[0] : `${unlockedTopics().length} of your topics`}` : '🔒 Unlocks as you upload')}${tile('graph', 'Plot functions with sliders')}${tile('formulas', formulaCount() ? `${formulaCount()} from your uploads` : '🔒 Unlocks as you upload')}${tile('planner', 'SACs & tests')}</div>
     ${weak.length ? `<section class="panel revise"><h3>Revise these first</h3><p>Topics you marked 🔴 Need help.</p><div class="chips">${weak.map((t) => `<a class="chip ask" href="#/topic/${encodeURIComponent(t.id)}">${esc(t.name)}</a>`).join('')}</div></section>` : ''}
     ${isOwner() && mine.photos.length ? `<div class="hint warnbox adopt"><b>${plural(mine.photos.length, 'photo')} ${mine.photos.length === 1 ? 'is' : 'are'} only on this device</b>
       – uploaded before you logged in as owner, so they’re not in your shared library (and won’t get weekly notes).

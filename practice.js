@@ -1,6 +1,8 @@
 // Practice (#/practice): endless Year 11 Maths Methods questions, marked straight away, with worked answers.
 // Each generator makes a fresh question from a random-number function r() (0 ≤ r < 1), so tests can pass a seeded one.
 // A question: { topic, q, a (number) | choices + correct (multiple choice), steps (worked answer) }. Maths in $…$.
+// Each generator has keys: it's only offered once something matching them has been uploaded (unlock.js).
+import { unlocked, hasUploads } from './unlock.js';
 
 const pick = (r, xs) => xs[Math.floor(r() * xs.length)];
 const int = (r, lo, hi, not = []) => { for (;;) { const n = lo + Math.floor(r() * (hi - lo + 1)); if (!not.includes(n)) return n; } };
@@ -21,54 +23,54 @@ export const frac = (n, d) => { if (d < 0) { n = -n; d = -d; } const g = gcd(n, 
 export const TOPICS = ['Differentiation', 'Algebra', 'Exponentials & logs', 'Circular functions', 'Probability', 'Integration', 'Functions & graphs'];
 
 const GEN = [
-  { topic: 'Differentiation', make(r) {
+  { topic: 'Differentiation', keys: ['differentiat', 'derivative', 'power rule', 'dy/dx', 'f\'(x)', 'first principles', 'calculus'], make(r) {
     const a = int(r, -3, 3, [0]), b = int(r, -5, 5), c = int(r, -6, 6), d = int(r, -9, 9), k = int(r, -3, 3);
     const ans = 3 * a * k * k + 2 * b * k + c;
     return { q: `If $f(x) = ${poly([[a, 3], [b, 2], [c, 1], [d, 0]])}$, find $f'(${k})$.`, a: ans,
       steps: [`$f'(x) = ${poly([[3 * a, 2], [2 * b, 1], [c, 0]])}$ (bring the power down, take one off the power; the constant goes)`, `$f'(${k}) = ${3 * a}(${k})^2 + ${2 * b}(${k}) + ${c} = ${ans}$`] };
   } },
-  { topic: 'Differentiation', make(r) {
+  { topic: 'Differentiation', keys: ['tangent', 'differentiat', 'derivative'], make(r) {
     const a = int(r, 1, 3), b = int(r, -6, 6, [0]), x0 = int(r, -3, 3);
     const y0 = a * x0 * x0 + b * x0, m = 2 * a * x0 + b;
     return { q: `Find the gradient of the tangent to $y = ${poly([[a, 2], [b, 1]])}$ at the point $(${x0}, ${y0})$.`, a: m,
       steps: [`$\\frac{dy}{dx} = ${poly([[2 * a, 1], [b, 0]])}$`, `At $x = ${x0}$: $\\frac{dy}{dx} = ${2 * a}(${x0}) + ${b} = ${m}$`] };
   } },
-  { topic: 'Algebra', make(r) {
+  { topic: 'Algebra', keys: ['quadratic', 'factoris', 'factoriz'], make(r) {
     const p = int(r, -7, 7), q = int(r, -7, 7, [p]);
     return { q: `Solve $${poly([[1, 2], [-(p + q), 1], [p * q, 0]])} = 0$. Give the larger solution.`, a: Math.max(p, q),
       steps: [`Find two numbers that multiply to $${p * q}$ and add to $${-(p + q)}$: $${-p}$ and $${-q}$.`, `$(x ${p < 0 ? '+' : '-'} ${Math.abs(p)})(x ${q < 0 ? '+' : '-'} ${Math.abs(q)}) = 0$, so $x = ${p}$ or $x = ${q}$.`, `The larger is $${Math.max(p, q)}$.`] };
   } },
-  { topic: 'Functions & graphs', make(r) {
+  { topic: 'Functions & graphs', keys: ['turning point', 'quadratic', 'parabola', 'completing the square', 'vertex'], make(r) {
     const b = 2 * int(r, -5, 5, [0]), c = int(r, -9, 9), h = -b / 2, k = c - (b * b) / 4;
     return { q: `Find the $y$-coordinate of the turning point of $y = ${poly([[1, 2], [b, 1], [c, 0]])}$.`, a: k,
       steps: [`Complete the square: $y = (x ${h < 0 ? '-' : '+'} ${Math.abs(h)})^2 ${k < 0 ? '-' : '+'} ${Math.abs(k)}$`, `Turning point $(${h}, ${k})$, so $y = ${k}$.`] };
   } },
-  { topic: 'Functions & graphs', make(r) {
+  { topic: 'Functions & graphs', keys: ['gradient', 'straight line', 'linear', 'coordinate geometry', 'equation of a line'], make(r) {
     const x1 = int(r, -5, 5), x2 = int(r, -5, 5, [x1]), y1 = int(r, -8, 8), y2 = int(r, -8, 8);
     return { q: `Find the gradient of the line through $(${x1}, ${y1})$ and $(${x2}, ${y2})$.`, a: (y2 - y1) / (x2 - x1), shown: frac(y2 - y1, x2 - x1),
       steps: [`$m = \\frac{y_2 - y_1}{x_2 - x_1} = \\frac{${y2} - (${y1})}{${x2} - (${x1})} = ${frac(y2 - y1, x2 - x1)}$`] };
   } },
-  { topic: 'Differentiation', make(r) {
+  { topic: 'Differentiation', keys: ['rate of change', 'average rate', 'chord'], make(r) {
     const b = int(r, -4, 4), a = int(r, -3, 1), c = int(r, a + 1, a + 4), f = (x) => x * x + b * x, ans = (f(c) - f(a)) / (c - a);
     return { q: `Find the average rate of change of $f(x) = ${poly([[1, 2], [b, 1]])}$ from $x = ${a}$ to $x = ${c}$.`, a: ans, shown: frac(f(c) - f(a), c - a),
       steps: [`$f(${c}) = ${f(c)}$ and $f(${a}) = ${f(a)}$`, `Average rate $= \\frac{f(${c}) - f(${a})}{${c} - (${a})} = \\frac{${f(c) - f(a)}}{${c - a}} = ${frac(f(c) - f(a), c - a)}$`] };
   } },
-  { topic: 'Exponentials & logs', make(r) {
+  { topic: 'Exponentials & logs', keys: ['expon', 'index law', 'indices', 'index'], make(r) {
     const base = pick(r, [2, 3, 5]), m = int(r, 2, base === 2 ? 6 : 4), s = int(r, -3, 3, [0]);
     return { q: `Solve $${base}^{x ${s < 0 ? '-' : '+'} ${Math.abs(s)}} = ${base ** m}$.`, a: m - s,
       steps: [`Write ${base ** m} as a power of ${base}: $${base ** m} = ${base}^{${m}}$`, `Same base, so the powers are equal: $x ${s < 0 ? '-' : '+'} ${Math.abs(s)} = ${m}$, so $x = ${m - s}$.`] };
   } },
-  { topic: 'Exponentials & logs', make(r) {
+  { topic: 'Exponentials & logs', keys: ['log'], make(r) {
     const base = pick(r, [2, 3, 10]), m = int(r, 2, base === 10 ? 4 : 5), split = int(r, 1, m - 1), x = base ** split, y = base ** (m - split);
     return { q: `Evaluate $\\log_{${base}} ${x} + \\log_{${base}} ${y}$.`, a: m,
       steps: [`Log law: $\\log_b x + \\log_b y = \\log_b (xy)$`, `$\\log_{${base}} (${x} \\times ${y}) = \\log_{${base}} ${x * y} = \\log_{${base}} ${base}^{${m}} = ${m}$`] };
   } },
-  { topic: 'Exponentials & logs', make(r) {
+  { topic: 'Exponentials & logs', keys: ['index law', 'indices', 'index', 'exponent law'], make(r) {
     const a = int(r, 2, 4), b = int(r, 2, 5), c = int(r, 1, 6);
     return { q: `Simplify $\\dfrac{x^{${a + b}} \\times x^{${c}}}{x^{${b}}}$ to $x^n$. What is $n$?`, a: a + c,
       steps: [`Multiply → add powers: $x^{${a + b}} \\times x^{${c}} = x^{${a + b + c}}$`, `Divide → subtract powers: $x^{${a + b + c} - ${b}} = x^{${a + c}}$`] };
   } },
-  { topic: 'Circular functions', make(r) {
+  { topic: 'Circular functions', keys: ['trig', 'circular', 'unit circle', 'exact value', 'radian', 'sine', 'cosine'], make(r) {
     const angles = [[0, '0'], [30, '\\frac{\\pi}{6}'], [45, '\\frac{\\pi}{4}'], [60, '\\frac{\\pi}{3}'], [90, '\\frac{\\pi}{2}'], [120, '\\frac{2\\pi}{3}'], [135, '\\frac{3\\pi}{4}'], [150, '\\frac{5\\pi}{6}'], [180, '\\pi']];
     const VAL = { 0: '0', 0.5: '\\frac{1}{2}', '-0.5': '-\\frac{1}{2}', 1: '1', '-1': '-1' };
     const show = (v) => {
@@ -91,37 +93,41 @@ const GEN = [
     return { q: `Find the exact value of $\\${fn}\\left(${useRad ? rad : `${deg}^\\circ`}\\right)$.`, choices, correct,
       steps: [useRad ? `$${rad} = ${deg}^\\circ$` : `Use the exact-value triangles / unit circle.`, `$\\${fn}(${deg}^\\circ) = ${correct}$`] };
   } },
-  { topic: 'Probability', make(r) {
+  { topic: 'Probability', keys: ['probab', 'venn', 'union', 'addition rule'], make(r) {
     const pa = int(r, 3, 7) / 10, pb = int(r, 2, 6) / 10, pab = int(r, 1, Math.min(pa, pb) * 10 - 1) / 10;
     const ans = Math.round((pa + pb - pab) * 100) / 100;
     return { q: `$\\Pr(A) = ${pa}$, $\\Pr(B) = ${pb}$ and $\\Pr(A \\cap B) = ${pab}$. Find $\\Pr(A \\cup B)$.`, a: ans,
       steps: [`Addition rule: $\\Pr(A \\cup B) = \\Pr(A) + \\Pr(B) - \\Pr(A \\cap B)$`, `$= ${pa} + ${pb} - ${pab} = ${ans}$`] };
   } },
-  { topic: 'Probability', make(r) {
+  { topic: 'Probability', keys: ['combination', 'combinatoric', 'choose', 'counting', 'selection', 'pascal', 'permutation', 'arrangement', 'ncr'], make(r) {
     const n = int(r, 5, 10), k = int(r, 2, n - 2);
     let c = 1; for (let i = 1; i <= k; i++) c = (c * (n - k + i)) / i;
     return { q: `How many ways can ${k} people be chosen from a group of ${n}? (Find $^{${n}}C_{${k}}$.)`, a: c,
       steps: [`$^{n}C_{r} = \\frac{n!}{r!(n-r)!}$`, `$^{${n}}C_{${k}} = \\frac{${n}!}{${k}!\\,${n - k}!} = ${c}$`] };
   } },
-  { topic: 'Probability', make(r) {
+  { topic: 'Probability', keys: ['independ'], make(r) {
     const pa = int(r, 2, 8) / 10, pb = int(r, 2, 8) / 10, ans = Math.round(pa * pb * 100) / 100;
     return { q: `$A$ and $B$ are independent, with $\\Pr(A) = ${pa}$ and $\\Pr(B) = ${pb}$. Find $\\Pr(A \\cap B)$.`, a: ans,
       steps: [`Independent events: $\\Pr(A \\cap B) = \\Pr(A) \\times \\Pr(B)$`, `$= ${pa} \\times ${pb} = ${ans}$`] };
   } },
-  { topic: 'Integration', make(r) {
+  { topic: 'Integration', keys: ['integra', 'antideriv', 'area under'], make(r) {
     const a = int(r, -3, 3, [0]), b = int(r, -4, 4), k = int(r, 1, 4), ans = (a * k * k) / 2 + b * k;
     return { q: `Evaluate $\\displaystyle\\int_0^{${k}} (${poly([[a, 1], [b, 0]])})\\,dx$.`, a: ans, shown: frac(a * k * k + 2 * b * k, 2),
       steps: [`Antiderivative: $${frac(a, 2) === '1' ? '' : frac(a, 2)}x^2 ${b < 0 ? '-' : '+'} ${Math.abs(b)}x$ (add one to the power, divide by the new power)`, `$\\left[${frac(a, 2)}x^2 + ${b}x\\right]_0^{${k}} = ${frac(a * k * k + 2 * b * k, 2)} - 0$`] };
   } },
-  { topic: 'Integration', make(r) {
+  { topic: 'Integration', keys: ['integra', 'antideriv', 'area under'], make(r) {
     const a = int(r, -2, 1), b = int(r, a + 1, 3), ans = b ** 3 - a ** 3;
     return { q: `Evaluate $\\displaystyle\\int_{${a}}^{${b}} 3x^2\\,dx$.`, a: ans,
       steps: [`Antiderivative of $3x^2$ is $x^3$.`, `$\\left[x^3\\right]_{${a}}^{${b}} = (${b})^3 - (${a})^3 = ${b ** 3} - (${a ** 3}) = ${ans}$`] };
   } },
 ];
 
-export function makeQuestion(r = Math.random, topic = null) {
-  const pool = topic ? GEN.filter((g) => g.topic === topic) : GEN;
+// Only question types about something that's been uploaded (see unlock.js). all = true ignores that (tests).
+export const available = (topic = null, all = false) => GEN.filter((g) => (all || unlocked(g.keys)) && (!topic || g.topic === topic));
+export const unlockedTopics = () => TOPICS.filter((t) => available(t).length);
+export function makeQuestion(r = Math.random, topic = null, all = false) {
+  const pool = available(topic, all);
+  if (!pool.length) return null;
   const g = pick(r, pool);
   return { topic: g.topic, ...g.make(r) };
 }
@@ -154,11 +160,18 @@ export function streak(days = stats.days, now = today()) {
 export const practiceStats = () => ({ streak: streak(), topics: stats.topics });
 
 export function practiceHtml() {
+  const open = unlockedTopics();
+  if (topic && !open.includes(topic)) { topic = null; q = null; answered = null; }
+  if (q && !open.includes(q.topic)) { q = null; answered = null; }
   if (!q) q = makeQuestion(Math.random, topic);
+  const head = `<nav class="crumbs" aria-label="You are here"><a href="#/">Home</a> <span>›</span> <b>Practice</b></nav>
+    <div class="bar"><h2>Practice</h2><div class="tools"><span class="pill">🔥 ${streak()} day streak</span><span class="pill">This session: ${session.right}/${session.done}</span></div></div>`;
+  if (!q) return `${head}<div class="empty locked"><p class="lock-ico">🔒</p><p><b>Practice unlocks as you upload your work.</b></p>
+    <p>Questions only cover what's in your uploaded photos${hasUploads() ? ' – nothing uploaded so far matches a practice skill yet' : ''}. Upload a photo of, say, your differentiation work and differentiation questions appear here.</p></div>`;
   const t = stats.topics, acc = (k) => (t[k]?.n ? Math.round((100 * t[k].right) / t[k].n) : null);
-  return `<nav class="crumbs" aria-label="You are here"><a href="#/">Home</a> <span>›</span> <b>Practice</b></nav>
-    <div class="bar"><h2>Practice</h2><div class="tools"><span class="pill">🔥 ${streak()} day streak</span><span class="pill">This session: ${session.right}/${session.done}</span></div></div>
-    <div class="chips pr-topics"><button class="chip ask ${topic ? '' : 'on'}" data-ptopic="">Mixed</button>${TOPICS.map((k) => `<button class="chip ask ${topic === k ? 'on' : ''}" data-ptopic="${esc(k)}">${esc(k)}${acc(k) !== null ? ` · ${acc(k)}%` : ''}</button>`).join('')}</div>
+  return `${head}
+    <p class="lead">Only on what you've uploaded – more topics unlock as you upload more work.</p>
+    <div class="chips pr-topics">${open.length > 1 ? `<button class="chip ask ${topic ? '' : 'on'}" data-ptopic="">Mixed</button>` : ''}${open.map((k) => `<button class="chip ask ${topic === k ? 'on' : ''}" data-ptopic="${esc(k)}">${esc(k)}${acc(k) !== null ? ` · ${acc(k)}%` : ''}</button>`).join('')}</div>
     <section class="pr-card ${answered === null ? '' : answered ? 'right' : 'wrong'}">
       <p class="eyebrow">${esc(q.topic)}</p>
       <div class="pr-q">${esc(q.q)}</div>

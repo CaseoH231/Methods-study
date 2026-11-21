@@ -6,7 +6,7 @@ const BASE = 'http://localhost:8768/';
 (async () => {
   const { handleApi } = await import(path.join(__dirname, '..', 'worker', 'api.js'));
   const gh = fakeGitHub(); const nodeFetch = globalThis.fetch; globalThis.fetch = gh.fetch;
-  gh.put('data/library.json', JSON.stringify({ version: 1, topics: [{ id: 't-calc', name: 'Calculus', color: '#4f46e5' }], photos: [], events: [] }));
+  gh.put('data/library.json', JSON.stringify({ version: 1, topics: [], photos: [], events: [] })); // nothing uploaded yet
   const env = { GITHUB_TOKEN: 'ghp_test', APP_PASSCODE: 'pw' };
   const checks = []; const check = (n, ok) => checks.push(`${ok ? 'ok  ' : 'FAIL'} ${n}`);
   const b = await chromium.launch(); const errs = [];
@@ -25,6 +25,18 @@ const BASE = 'http://localhost:8768/';
     await p.waitForSelector('#main .hello');
     return p;
   }
+  // Nothing uploaded: the tools that give maths information stay locked.
+  const empty = await page(true);
+  await empty.goto(BASE + '#/practice'); await empty.waitForSelector('.locked');
+  const pLocked = !(await empty.$('.pr-card'));
+  await empty.goto(BASE + '#/formulas'); await empty.waitForSelector('.locked');
+  const fLocked = (await empty.$$('.f-card')).length === 0;
+  await empty.goto(BASE + '#/graph'); await empty.waitForSelector('#g-canvas');
+  check('locked: nothing uploaded → no practice, no formulas, no example graphs', pLocked && fLocked && !(await empty.$('.g-presets')) && (await empty.inputValue('[data-fn="0"]')) === '');
+  await empty.close();
+  // Upload some topics: only those unlock.
+  gh.put('data/library.json', JSON.stringify({ version: 1, events: [], photos: [{ id: 'p-aaaaaa1', topic: 't-prob', title: 'Venn diagram questions', added: '2026-11-20', file: 'photos/p-aaaaaa1.jpg' }],
+    topics: [{ id: 't-calc', name: 'Calculus', color: '#4f46e5' }, { id: 't-prob', name: 'Probability', color: '#be185d' }, { id: 't-log', name: 'Log laws', color: '#0f766e' }] }));
   const o = await page(true);
   check('home: study tools, planner and practice cards', (await o.$$('.tool-tile')).length === 4 && !!(await o.$('.up-next')) && !!(await o.$('.streak-card')));
 
@@ -44,6 +56,8 @@ const BASE = 'http://localhost:8768/';
   check('practice: right and wrong answers are marked, with worked steps', right1 && wrong1 && pills.includes('1/2') && pills.includes('1 day streak'));
   await o.click('[data-ptopic="Probability"]'); await o.waitForSelector('.pr-card');
   check('practice: choosing a topic gives questions on it', (await o.textContent('.pr-card .eyebrow')).trim() === 'Probability');
+  const chips = await o.$$eval('.pr-topics [data-ptopic]', (x) => x.map((e) => e.dataset.ptopic).filter(Boolean).sort().join('|'));
+  check('practice: only topics that have been uploaded are offered', chips === 'Differentiation|Exponentials & logs|Probability');
 
   // Graph.
   await o.click('#topics [data-page="graph"]'); await o.waitForSelector('#g-canvas');
@@ -58,10 +72,12 @@ const BASE = 'http://localhost:8768/';
   // Formula sheet.
   await o.click('#topics [data-page="formulas"]'); await o.waitForSelector('.f-card');
   const all = (await o.$$('.f-card')).length;
+  const names = await o.$$eval('.f-card header b', (x) => x.map((e) => e.textContent));
   await o.fill('#f-search', 'log'); await o.waitForTimeout(100);
   const some = (await o.$$('.f-card')).length;
   await o.click('.f-star >> nth=0'); await o.fill('#f-search', ''); await o.click('[data-f="stars"]');
-  check('formulas: searchable and starrable', all > 40 && some > 0 && some < all && (await o.$$('.f-card')).length === 1);
+  check('formulas: only ones for uploaded topics, searchable and starrable', all > 5 && all < 30 && names.includes('Addition rule') && !names.includes('Quadratic formula')
+    && some > 0 && some < all && (await o.$$('.f-card')).length === 1);
 
   // Planner: the owner's dates are shared.
   await o.click('#topics [data-page="planner"]'); await o.waitForSelector('#ev-form');

@@ -26,7 +26,7 @@ const path = require('path');
   const integrate = (f, a, b) => { let s = 0; const n = 2000, h = (b - a) / n; for (let i = 0; i < n; i++) { const x = a + (i + 0.5) * h; s += f({ x }) * h; } return s; };
   let made = 0, verified = 0; const bad = [];
   for (let i = 0; i < 4000; i++) {
-    const q = P.makeQuestion(r); made++;
+    const q = P.makeQuestion(r, null, true); made++;
     if (q.choices) { if (!q.choices.includes(q.correct) || new Set(q.choices).size !== 4) bad.push(q.q); continue; }
     if (!Number.isFinite(q.a)) { bad.push(q.q); continue; }
     let m;
@@ -41,7 +41,20 @@ const path = require('path');
   check(`practice: ${made} questions, all with a proper answer`, made === 4000 && !bad.length);
   check(`practice: ${verified} answers re-checked independently (derivatives, integrals, roots, rates, turning points)`, verified > 1500 && !bad.length);
   if (bad.length) console.log('bad:', bad.slice(0, 5));
-  check('practice: every topic has questions', P.TOPICS.every((t) => P.makeQuestion(r, t).topic === t));
+  check('practice: every topic has questions', P.TOPICS.every((t) => P.makeQuestion(r, t, true).topic === t));
+
+  // Nothing is shown until it's been uploaded.
+  const U = await import(path.join(__dirname, '..', 'unlock.js'));
+  const F = await import(path.join(__dirname, '..', 'formulas.js'));
+  U.setSources([]);
+  check('locked: with nothing uploaded there are no questions and no formulas', P.makeQuestion(r) === null && P.unlockedTopics().length === 0 && F.formulaCount() === 0 && F.formulaCount(true) === 54);
+  U.setSources(['Probability', 'Venn diagrams worksheet']);
+  const probOnly = Array.from({ length: 200 }, () => P.makeQuestion(r).topic);
+  check('unlocked: uploading probability work gives only probability questions and formulas', probOnly.every((t) => t === 'Probability')
+    && JSON.stringify(P.unlockedTopics()) === '["Probability"]' && F.formulaCount() > 0 && F.formulaCount() < 15);
+  U.setSources(['Logarithms', 'Ex 5A log laws']);
+  check('unlocked: words must start the same – "catalogue" doesn’t unlock logs, "Log laws" does', P.unlockedTopics().join() === 'Exponentials & logs'
+    && (U.setSources(['catalogue of photos']), P.unlockedTopics().length === 0));
   check('practice: answers can be typed as whole numbers, decimals or fractions', P.readAnswer('3/4') === 0.75 && P.readAnswer('-2.5') === -2.5 && P.readAnswer(' 7 ') === 7
     && P.readAnswer('−1/2') === -0.5 && Number.isNaN(P.readAnswer('abc')) && Number.isNaN(P.readAnswer('1/0')));
   check('practice: day streaks count back from today (or yesterday)', P.streak(['2026-11-18', '2026-11-19', '2026-11-20'], '2026-11-20') === 3

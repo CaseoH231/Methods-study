@@ -77,13 +77,18 @@ export function parse(src) {
 
 // ---------- the page ----------
 const COLORS = ['#7c3aed', '#0d9488', '#e11d48'];
+// Example graph families – each only offered once something matching has been uploaded (unlock.js).
 const PRESETS = [
-  ['Parabola', 'a(x-h)^2+k'], ['Cubic', 'a(x-b)(x-c)(x-d)'], ['Hyperbola', 'a/(x-h)+k'], ['Square root', 'a sqrt(x-h)+k'],
-  ['Exponential', 'a e^(b x)+k'], ['Logarithm', 'a ln(x-h)+k'], ['Sine', 'a sin(b(x-h))+k'], ['Tangent', 'a tan(b x)'],
+  ['Parabola', 'a(x-h)^2+k', ['quadratic', 'parabola', 'turning point']], ['Cubic', 'a(x-b)(x-c)(x-d)', ['cubic', 'polynomial']],
+  ['Hyperbola', 'a/(x-h)+k', ['hyperbol']], ['Square root', 'a sqrt(x-h)+k', ['square root', 'root function']],
+  ['Exponential', 'a e^(b x)+k', ['exponential']], ['Logarithm', 'a ln(x-h)+k', ['log']],
+  ['Sine', 'a sin(b(x-h))+k', ['sine', 'cosine', 'trig', 'circular']], ['Tangent', 'a tan(b x)', ['tan graph', 'trig', 'circular']],
+  ['Straight line', 'm x + c', ['straight line', 'linear', 'gradient']], ['Transformations', 'a(n(x-h))^2+k', ['transform', 'dilat']],
 ];
+import { unlocked } from './unlock.js';
 const SAVED = 'methods-study-graph';
 let state = (() => { try { return JSON.parse(localStorage.getItem(SAVED)) || null; } catch { return null; } })()
-  || { fns: ['a(x-h)^2+k', '', ''], p: { a: 1, b: 1, c: 0, d: 0, h: 0, k: 0, m: 1, n: 1 }, view: { x: 0, y: 0, s: 40 } };
+  || { fns: ['', '', ''], p: { a: 1, b: 1, c: 0, d: 0, h: 0, k: 0, m: 1, n: 1 }, view: { x: 0, y: 0, s: 40 } };
 const save = () => { try { localStorage.setItem(SAVED, JSON.stringify(state)); } catch { /* fine */ } };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -96,7 +101,7 @@ export function graphHtml() {
         ${state.fns.map((f, i) => `<label class="g-fn" style="--fc:${COLORS[i]}"><span>y${i + 1} =</span><input data-fn="${i}" value="${esc(f)}" placeholder="${i ? 'optional' : 'e.g. x^2 - 4'}" spellcheck="false" autocomplete="off"></label>
           <small class="g-err" data-err="${i}"></small>`).join('')}
         <div class="g-sliders" id="g-sliders"></div>
-        <details class="g-presets"><summary>Families to explore</summary><div class="chips">${PRESETS.map(([n, f]) => `<button class="chip ask" data-preset="${esc(f)}">${n}: ${esc(f)}</button>`).join('')}</div></details>
+        ${PRESETS.some(([, , k]) => unlocked(k)) ? `<details class="g-presets"><summary>Graphs from your topics</summary><div class="chips">${PRESETS.filter(([, , k]) => unlocked(k)).map(([n, f]) => `<button class="chip ask" data-preset="${esc(f)}">${n}: ${esc(f)}</button>`).join('')}</div></details>` : ''}
         <p class="hint tipline">Tips: <code>2x</code> means 2×x · <code>x^3</code> powers · <code>sqrt(x)</code>, <code>ln(x)</code>, <code>log(x)</code> (base 10), <code>e^x</code>, <code>sin(x)</code> in radians, <code>pi</code>, <code>|x|</code></p>
       </div>
       <div class="g-plot"><canvas id="g-canvas" aria-label="Graph"></canvas><div class="g-read" id="g-read"></div></div>
