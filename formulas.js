@@ -1,7 +1,5 @@
 // Formula sheet (#/formulas): the key Maths Methods Units 1 & 2 formulas, searchable, with stars for the tricky ones.
-// Which uploads unlock each formula (word starts, see unlock.js). A formula shows only when something uploaded matches.
-import { unlocked, hasUploads } from './unlock.js';
-export const KEYS = {"Quadratic formula": ["quadratic"],"Discriminant": ["discriminant","quadratic"],"Completing the square": ["completing the square","turning point","quadratic"],"Difference of two squares": ["difference of","factoris","factoriz","expand"],"Perfect squares": ["perfect square","expand","factoris","factoriz"],"Sum and difference of cubes": ["cubic","cubes","sum of cubes","difference of cubes"],"Factor theorem": ["factor theorem","polynomial","cubic"],"Remainder theorem": ["remainder","polynomial","division"],"Gradient": ["gradient","straight line","linear","coordinate"],"Straight line": ["straight line","linear","equation of a line","coordinate"],"Midpoint": ["midpoint","coordinate"],"Distance between two points": ["distance","coordinate"],"Parallel and perpendicular": ["parallel","perpendicular"],"Turning-point form": ["turning point","parabola","quadratic","vertex"],"Transformations": ["transform","dilat","reflect","translat"],"Hyperbola": ["hyperbol"],"Truncus": ["truncus"],"Square root": ["square root","root function"],"Circle": ["circle"],"Inverse function": ["inverse"],"Index laws": ["index","indices","exponent law","power"],"Zero, negative and fractional powers": ["index","indices","negative power","fractional","surd"],"Definition of a log": ["log"],"Log laws": ["log"],"Log of a power": ["log"],"Special logs": ["log"],"Change of base": ["change of base","log"],"Exponential graphs": ["exponential"],"Degrees and radians": ["radian","degree","circular","trig"],"Arc length": ["arc","sector","radian"],"Pythagorean identity": ["trig","identit","circular"],"Tangent": ["trig","circular"],"Exact values": ["exact value","trig","unit circle","circular"],"Symmetry": ["symmetr","unit circle","trig","circular","cast"],"Complementary angles": ["complementary","trig","circular"],"Graphs of sin and cos": ["sine","cosine","trig graph","circular","amplitude","period"],"Graph of tan": ["tan graph","circular","trig graph","period"],"Complement": ["probab","complement"],"Addition rule": ["probab","venn","union","addition rule"],"Conditional probability": ["conditional"],"Independence": ["independ"],"Law of total probability": ["total probability","tree diagram","conditional"],"Arrangements": ["arrangement","permutation","counting"],"Selections": ["combination","selection","choose","counting"],"Pascal’s triangle": ["pascal","combination"],"Average rate of change": ["rate of change","average rate","chord"],"First principles": ["first principles","limit"],"Power rule": ["differentiat","derivative","power rule", "calculus"],"Sum and constant rules": ["differentiat","derivative"],"Tangent line": ["tangent","normal"],"Stationary points": ["stationary","turning point","maxim","minim"],"Antiderivative (power rule)": ["antideriv","integra"],"Definite integral": ["definite integral","integra","area under"],"Kinematics": ["kinematic","velocity","acceleration","displacement","motion"]};
+import { formulaShown } from './unlock.js';
 export const SHEET = [
   ['Algebra', [
     ['Quadratic formula', 'x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', 'Solves $ax^2 + bx + c = 0$.'],
@@ -80,10 +78,11 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 
 function listHtml() {
   const f = filter.toLowerCase();
-  const parts = SHEET.map(([sect, rows]) => [sect, rows.filter(([n, tex, note]) => unlocked(KEYS[n]) && (!onlyStars || stars.has(n))
+  const parts = SHEET.map(([sect, rows]) => [sect, rows.filter(([n, tex, note]) => formulaShown(n) && (!onlyStars || stars.has(n))
     && (!f || `${sect} ${n} ${tex} ${note}`.toLowerCase().includes(f)))]).filter(([, rows]) => rows.length);
-  if (!formulaCount()) return `<div class="empty locked"><p class="lock-ico">🔒</p><p><b>Formulas unlock as you upload your work.</b></p>
-    <p>This sheet only shows formulas for things in your uploaded photos${hasUploads() ? ' – nothing uploaded so far matches a formula yet' : ''}.</p></div>`;
+  if (!formulaCount()) return `<div class="empty locked"><p class="lock-ico">🔒</p><p><b>All formulas are locked for now.</b></p>
+    <p>A formula appears once it's actually written on one of your uploaded photos (they're checked when the weekly notes are added),
+    or when you ask the ✦ Ask helper to unlock it – e.g. “unlock the quadratic formula, it's on my photo”.</p></div>`;
   if (!parts.length) return `<p class="empty">${onlyStars ? 'No starred formulas yet – tap ☆ on the ones you keep forgetting.' : 'No formulas match.'}</p>`;
   return parts.map(([sect, rows]) => `<section class="f-sect"><h3 class="sect-h">${esc(sect)}</h3><div class="f-grid">${rows.map(([n, tex, note]) => `
     <article class="f-card"><header><b>${esc(n)}</b><button class="f-star ${stars.has(n) ? 'on' : ''}" data-star="${esc(n)}" aria-label="Star ${esc(n)}">${stars.has(n) ? '★' : '☆'}</button></header>
@@ -92,7 +91,7 @@ function listHtml() {
 export function formulasHtml() {
   return `<nav class="crumbs" aria-label="You are here"><a href="#/">Home</a> <span>›</span> <b>Formula sheet</b></nav>
     <div class="bar"><h2>Formula sheet</h2><div class="tools"><button data-f="stars" class="${onlyStars ? 'dark' : ''}">★ Starred</button><button data-f="print">Print</button></div></div>
-    <p class="lead">Only formulas for what you've uploaded – ${formulaCount()} so far. More unlock as you upload more work.</p>
+    <p class="lead">Only formulas written on your uploaded photos, or ones you've asked the helper to unlock – ${formulaCount()} so far.</p>
     <input class="f-search" id="f-search" type="search" placeholder="Search formulas – e.g. log, tangent, conditional" value="${esc(filter)}">
     <div id="f-list">${listHtml()}</div>`;
 }
@@ -109,4 +108,5 @@ export function bindFormulas(main, { drawMaths }) {
   drawMaths(main);
 }
 // How many formulas your uploads have unlocked (all = every formula on the sheet).
-export const formulaCount = (all = false) => SHEET.reduce((n, [, r]) => n + r.filter(([name]) => all || unlocked(KEYS[name])).length, 0);
+export const formulaCount = (all = false) => SHEET.reduce((n, [, r]) => n + r.filter(([name]) => all || formulaShown(name)).length, 0);
+export const FORMULA_NAMES = SHEET.flatMap(([, rows]) => rows.map(([name]) => name));

@@ -34,7 +34,7 @@ const BASE = 'http://localhost:8768/';
   check('locked: nothing uploaded → no practice, no formulas', pLocked && fLocked);
   await empty.close();
   // Upload some topics: only those unlock.
-  gh.put('data/library.json', JSON.stringify({ version: 1, events: [], photos: [{ id: 'p-aaaaaa1', topic: 't-prob', title: 'Venn diagram questions', added: '2026-11-20', file: 'photos/p-aaaaaa1.jpg' }],
+  gh.put('data/library.json', JSON.stringify({ version: 1, events: [], unlocked: ['Log laws'], photos: [{ id: 'p-aaaaaa1', topic: 't-prob', title: 'Venn diagram questions', added: '2026-11-20', file: 'photos/p-aaaaaa1.jpg', formulas: ['Addition rule'] }],
     topics: [{ id: 't-calc', name: 'Calculus', color: '#4f46e5' }, { id: 't-prob', name: 'Probability', color: '#be185d' }, { id: 't-log', name: 'Log laws', color: '#0f766e' }] }));
   const o = await page(true);
   check('home: study tools, planner and practice cards', (await o.$$('.tool-tile')).length === 3 && !!(await o.$('.up-next')) && !!(await o.$('.streak-card')));
@@ -67,7 +67,7 @@ const BASE = 'http://localhost:8768/';
   await o.fill('#f-search', 'log'); await o.waitForTimeout(100);
   const some = (await o.$$('.f-card')).length;
   await o.click('.f-star >> nth=0'); await o.fill('#f-search', ''); await o.click('[data-f="stars"]');
-  check('formulas: only ones for uploaded topics, searchable and starrable', all > 5 && all < 30 && names.includes('Addition rule') && !names.includes('Quadratic formula')
+  check('formulas: only ones written on a photo or unlocked on request, searchable and starrable', all === 2 && names.sort().join('|') === 'Addition rule|Log laws' && names.includes('Addition rule') && !names.includes('Quadratic formula')
     && some > 0 && some < all && (await o.$$('.f-card')).length === 1);
 
   // Planner: the owner's dates are shared.

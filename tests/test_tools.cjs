@@ -51,7 +51,9 @@ const path = require('path');
   U.setSources(['Probability', 'Venn diagrams worksheet']);
   const probOnly = Array.from({ length: 200 }, () => P.makeQuestion(r).topic);
   check('unlocked: uploading probability work gives only probability questions and formulas', probOnly.every((t) => t === 'Probability')
-    && JSON.stringify(P.unlockedTopics()) === '["Probability"]' && F.formulaCount() > 0 && F.formulaCount() < 15);
+    && JSON.stringify(P.unlockedTopics()) === '["Probability"]');
+  check('formulas: a topic name alone unlocks none – only formulas on a photo or unlocked on request', F.formulaCount() === 0
+    && (U.setFormulas(['Addition rule', 'Log laws']), F.formulaCount() === 2) && (U.setFormulas([]), F.formulaCount() === 0));
   U.setSources(['Logarithms', 'Ex 5A log laws']);
   check('unlocked: words must start the same – "catalogue" doesn’t unlock logs, "Log laws" does', P.unlockedTopics().join() === 'Exponentials & logs'
     && (U.setSources(['catalogue of photos']), P.unlockedTopics().length === 0));
